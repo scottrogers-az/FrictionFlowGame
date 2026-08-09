@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Friction &amp; Flow — The Liquidity Loop</title>
+
+<!-- ===================================================================
+     SOCIAL PREVIEW CARD
+     Replace scottrogers-az below with your GitHub username after you
+     publish. Both URLs must be absolute — relative paths will not work.
+     Note: X shows only the image, not the title or description, so
+     og-card.png is what people actually see. Keep it next to this file.
+     =================================================================== -->
+<meta property="og:type"        content="website">
+<meta property="og:site_name"   content="Friction &amp; Flow">
+<meta property="og:title"       content="Friction &amp; Flow: The Liquidity Loop">
+<meta property="og:description" content="A browser game about how cross-border money actually moves. Route real payments over correspondent banking or the XRP Ledger and watch what each one costs — including the capital you must park overseas before anyone sends a dollar.">
+<meta property="og:url"         content="https://scottrogers-az.github.io/FrictionFlowGame/">
+<meta property="og:image"       content="https://scottrogers-az.github.io/FrictionFlowGame/og-card.png">
+<meta property="og:image:width"  content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt"   content="Correspondent banking: 5.2 to 7.7 percent fee, 2 to 5 days, $200,000 of capital parked. XRP bridge: 0.00001 XRP fee, 3 to 5 seconds, nothing parked.">
+
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:title"       content="Friction &amp; Flow: The Liquidity Loop">
+<meta name="twitter:description" content="A browser game about how cross-border money actually moves.">
+<meta name="twitter:image"       content="https://scottrogers-az.github.io/FrictionFlowGame/og-card.png">
+<meta name="twitter:image:alt"   content="Correspondent banking versus the XRP bridge, side by side: fees, settlement time, and capital parked.">
+
+<meta name="description" content="A free browser board game teaching how cross-border payments work: correspondent banking, nostro accounts, trapped liquidity, and what settling in seconds on the XRP Ledger changes.">
+<meta name="theme-color" content="#0a0f1c">
+<style>
+:root{
+  --bg:#0a0f1c; --bg2:#0f172a; --panel:#121c33; --panel2:#182444;
+  --line:#243356; --txt:#e8eefc; --dim:#8fa2c8;
+  --flow:#22d3ee; --flow2:#0891b2;
+  --friction:#f59e0b; --friction2:#b45309;
+  --good:#34d399; --bad:#f87171; --gold:#fbbf24;
+  --p1:#22d3ee; --p2:#f472b6;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:radial-gradient(1200px 700px at 50% -10%,#152244 0%,var(--bg) 60%);
+  color:var(--txt); font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+  min-height:100vh; padding:18px; font-size:14px;
+}
+h1,h2,h3{font-weight:700;letter-spacing:-.01em}
+.wrap{max-width:1500px;margin:0 auto}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.logo{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.logo .f{color:var(--friction)} .logo .l{color:var(--flow)}
+.tag{color:var(--dim);font-size:13px;border-left:1px solid var(--line);padding-left:14px}
+.hbtns{margin-left:auto;display:flex;gap:8px}
+button{
+  font:inherit;font-weight:600;cursor:pointer;border:1px solid var(--line);
+  background:var(--panel2);color:var(--txt);padding:9px 15px;border-radius:9px;
+  transition:.15s;
+}
+button:hover:not(:disabled){background:#22335e;border-color:#3a5490;transform:translateY(-1px)}
+button:disabled{opacity:.35;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,var(--flow),var(--flow2));border-color:transparent;color:#04121a}
+.btn-primary:hover:not(:disabled){filter:brightness(1.12);background:linear-gradient(135deg,var(--flow),var(--flow2))}
+.btn-amber{background:linear-gradient(135deg,#fbbf24,var(--friction2));border-color:transparent;color:#1a1000}
+.btn-amber:hover:not(:disabled){filter:brightness(1.1);background:linear-gradient(135deg,#fbbf24,var(--friction2))}
+
+/* ---------- layout ---------- */
+.grid{display:grid;grid-template-columns:1fr 350px;gap:16px;align-items:start}
+@media(max-width:1150px){.grid{grid-template-columns:1fr}}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.panel h3{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:10px}
+
+/* ---------- board ---------- */
+#board{
+  display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(6,1fr);
+  gap:6px;aspect-ratio:1.18/1;min-height:520px;
+}
+.sq{
+  background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+  padding:6px;display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;overflow:hidden;font-size:10.5px;line-height:1.25;transition:.2s;
+}
+.sq.corridor{background:linear-gradient(160deg,#16294d,#111d38)}
+.sq.friction{background:linear-gradient(160deg,#3a2708,#1d1605);border-color:#5c4111}
+.sq.flow{background:linear-gradient(160deg,#07323c,#04202a);border-color:#0e5566}
+.sq.corner{background:linear-gradient(160deg,#2a1f4d,#161036);border-color:#40357a}
+.sq .lbl{font-weight:700;font-size:11px}
+.sq .sub{color:var(--dim);font-size:9.5px}
+.sq .fee{font-size:9.5px;color:var(--friction);font-weight:700}
+.sq.active{box-shadow:0 0 0 2px var(--gold),0 0 22px rgba(251,191,36,.4);transform:scale(1.03);z-index:5}
+.sq .flag{font-size:14px}
+.toks{display:flex;gap:3px;position:absolute;bottom:4px;right:4px}
+.tok{width:15px;height:15px;border-radius:50%;border:2px solid #0a0f1c;font-size:8px;
+  display:flex;align-items:center;justify-content:center;font-weight:800;color:#04121a}
+.tok.a{background:var(--p1)} .tok.b{background:var(--p2)}
+.nostro-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--friction);
+  box-shadow:0 0 6px var(--friction)}
+
+/* center of board */
+#center{
+  grid-column:2/6;grid-row:2/6;background:linear-gradient(160deg,#101a30,#0b1224);
+  border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;overflow:hidden
+}
+#centerTitle{font-size:15px;font-weight:800}
+#centerBody{font-size:12px;color:var(--dim);line-height:1.5}
+#log{flex:1;overflow-y:auto;font-size:11.5px;line-height:1.6;padding-right:6px}
+#log div{padding:3px 0;border-bottom:1px solid rgba(36,51,86,.5)}
+#log .t{color:var(--dim);font-size:10px}
+.dieRow{display:flex;align-items:center;gap:12px}
+#die{width:52px;height:52px;border-radius:12px;background:#fff;color:#0a0f1c;
+  display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;flex:none}
+#die.rolling{animation:shake .45s}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg) scale(1.08)}75%{transform:rotate(14deg) scale(1.08)}}
+
+/* ---------- dashboards ---------- */
+.dash{border-radius:12px;padding:12px;border:1px solid var(--line);background:var(--panel);margin-bottom:12px}
+.dash.you{border-color:rgba(34,211,238,.45)}
+.dash.ai{border-color:rgba(244,114,182,.35)}
+.dash .who{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px;margin-bottom:10px}
+.pip{width:11px;height:11px;border-radius:50%}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.stat{background:var(--bg2);border-radius:8px;padding:7px 9px}
+.stat .k{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim)}
+.stat .v{font-size:14px;font-weight:800;margin-top:1px}
+.bar{height:7px;background:var(--bg2);border-radius:4px;overflow:hidden;margin-top:9px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--flow2),var(--flow));transition:width .5s}
+.dash.ai .bar i{background:linear-gradient(90deg,#9d174d,var(--p2))}
+.goalTxt{font-size:10px;color:var(--dim);margin-top:4px;display:flex;justify-content:space-between}
+
+/* ---------- modal ---------- */
+.overlay{position:fixed;inset:0;background:rgba(4,8,18,.82);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;padding:20px;z-index:100}
+.overlay.on{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  max-width:780px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.mhead{padding:18px 22px;border-bottom:1px solid var(--line)}
+.mhead .eyebrow{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim)}
+.mhead h2{font-size:21px;margin-top:4px}
+.mbody{padding:20px 22px}
+.mfoot{padding:14px 22px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+
+/* rail comparison */
+.rails{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+@media(max-width:620px){.rails{grid-template-columns:1fr}}
+.rail{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--bg2)}
+.rail.legacy{border-color:rgba(245,158,11,.4)}
+.rail.xrp{border-color:rgba(34,211,238,.45)}
+.rail h4{font-size:14px;margin-bottom:2px}
+.rail .rsub{font-size:10.5px;color:var(--dim);margin-bottom:10px}
+.rline{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px dashed rgba(36,51,86,.7)}
+.rline:last-of-type{border:none}
+.rline b{font-variant-numeric:tabular-nums}
+.pos{color:var(--good)} .neg{color:var(--bad)} .warn{color:var(--friction)}
+.rail button{width:100%;margin-top:10px}
+.note{font-size:11.5px;color:var(--dim);background:var(--bg2);border-left:3px solid var(--flow);
+  padding:10px 12px;border-radius:0 8px 8px 0;line-height:1.55;margin-top:12px}
+.note.amber{border-left-color:var(--friction)}
+.note b{color:var(--txt)}
+
+/* card */
+.card{border-radius:14px;padding:22px;text-align:center;margin-bottom:16px}
+.card.friction{background:linear-gradient(160deg,#4a3109,#221806);border:1px solid #6b4c13}
+.card.flow{background:linear-gradient(160deg,#06414f,#032430);border:1px solid #0d6a80}
+.card .ico{font-size:38px}
+.card h3{font-size:20px;margin:8px 0;color:var(--txt);text-transform:none;letter-spacing:0}
+.card .eff{font-size:13px;font-weight:700;margin-top:6px}
+
+/* learn */
+.concepts{display:flex;flex-direction:column;gap:7px;max-height:330px;overflow-y:auto}
+.cpt{background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+.cpt .cn{font-weight:700;font-size:12px}
+.cpt .cd{font-size:11px;color:var(--dim);line-height:1.5;margin-top:3px}
+.locked{opacity:.32}
+table.gloss{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+table.gloss th,table.gloss td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+table.gloss th{background:var(--bg2);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim)}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tabs button{padding:6px 12px;font-size:12px;border-radius:8px}
+.tabs button.on{background:var(--flow2);border-color:transparent;color:#04121a}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo"><span class="f">Friction</span> &amp; <span class="l">Flow</span></div>
+  <div class="tag">The Liquidity Loop — learn how cross-border money actually moves</div>
+  <div class="hbtns">
+    <button onclick="showRules()">How to play</button>
+    <button onclick="showGuide()">Teaching guide</button>
+    <button onclick="showGloss()">Glossary</button>
+    <button onclick="printGuide()">Print guide</button>
+    <button onclick="newGame()">New game</button>
+  </div>
+</header>
+
+<div class="grid">
+  <!-- BOARD -->
+  <div class="panel">
+    <div id="board"></div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div>
+    <div class="dash you" id="dashYou"></div>
+    <div class="dash ai" id="dashAI"></div>
+    <div class="panel">
+      <div class="tabs">
+        <button id="tabC" class="on" onclick="setTab('c')">Concepts learned</button>
+        <button id="tabF" onclick="setTab('f')">In flight</button>
+      </div>
+      <div id="tabBody"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="overlay" id="ov"><div class="modal" id="mod"></div></div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   DATA — figures sourced from xrpl.org and the World Bank's
+   Remittance Prices Worldwide dataset. See glossary for notes.
+   ============================================================ */
+
+const START_CASH   = 500000;   // working capital
+const GOAL         = 1000000;  // delivered value to win
+const NOSTRO_COST  = 200000;   // capital parked per legacy corridor
+const COMMISSION   = 0.01;     // your cut of every delivered payment
+const XRPL_FEE_XRP = 0.00001;  // 10 drops, burned
+const XRP_PRICE_0  = 2.40;
+
+// Corridor fee % ≈ real regional averages from World Bank RPW.
+const CORRIDORS = [
+  {id:0, from:"USA",       to:"Mexico",    flag:"🇺🇸→🇲🇽", fee:.058, days:2},
+  {id:1, from:"UK",        to:"Nigeria",   flag:"🇬🇧→🇳🇬", fee:.077, days:3},
+  {id:2, from:"UAE",       to:"India",     flag:"🇦🇪→🇮🇳", fee:.052, days:2},
+  {id:3, from:"USA",       to:"Philippines",flag:"🇺🇸→🇵🇭",fee:.061, days:2},
+  {id:4, from:"Japan",     to:"Brazil",    flag:"🇯🇵→🇧🇷", fee:.069, days:3},
+  {id:5, from:"EU",        to:"Kenya",     flag:"🇪🇺→🇰🇪", fee:.077, days:3},
+  {id:6, from:"Singapore", to:"Vietnam",   flag:"🇸🇬→🇻🇳", fee:.064, days:2},
+  {id:7, from:"Australia", to:"Indonesia", flag:"🇦🇺→🇮🇩", fee:.067, days:3}
+];
+
+// 20-space ring. c = corridor index.
+const BOARD = [
+  {t:"corner", n:"LEDGER CLOSE",     s:"Start · collect $25,000", ico:"🔄"},
+  {t:"corridor", c:0},
+  {t:"friction", n:"FRICTION", s:"Draw a card", ico:"⚠️"},
+  {t:"corridor", c:1},
+  {t:"flow", n:"FLOW", s:"Draw a card", ico:"⚡"},
+  {t:"corner", n:"COMPLIANCE REVIEW", s:"AML / KYC costs", ico:"🛡️"},
+  {t:"corridor", c:2},
+  {t:"friction", n:"FRICTION", s:"Draw a card", ico:"⚠️"},
+  {t:"corridor", c:3},
+  {t:"flow", n:"FLOW", s:"Draw a card", ico:"⚡"},
+  {t:"corner", n:"MARKET OPEN", s:"XRP price moves", ico:"📈"},
+  {t:"corridor", c:4},
+  {t:"friction", n:"FRICTION", s:"Draw a card", ico:"⚠️"},
+  {t:"corridor", c:5},
+  {t:"flow", n:"FLOW", s:"Draw a card", ico:"⚡"},
+  {t:"corner", n:"CAPITAL CALL", s:"Carrying cost on trapped cash", ico:"🏦"},
+  {t:"corridor", c:6},
+  {t:"friction", n:"FRICTION", s:"Draw a card", ico:"⚠️"},
+  {t:"corridor", c:7},
+  {t:"flow", n:"FLOW", s:"Draw a card", ico:"⚡"}
+];
+
+// ring position: 6x6 perimeter, clockwise from top-left
+function cell(i){
+  if(i<=5)  return [1, i+1];
+  if(i<=9)  return [i-4, 6];
+  if(i<=15) return [6, 6-(i-10)];
+  return [6-(i-15), 1];
+}
+
+/* ---------------- CARD DECKS ---------------- */
+
+const FRICTION_DECK = [
+  {n:"Middleman Tax", ico:"💸", concept:"Correspondent chain",
+   txt:"A wire can hop through three or four banks before it lands. Every hop takes a cut and none of them tells you in advance.",
+   eff:p=>{const n=Math.max(1,nostroCount(p));const c=n*4000;pay(p,c);return `–${money(c)} · $4,000 for each of your ${n} corridor${n>1?"s":""}`;}},
+
+  {n:"Stuck Cash Trap", ico:"🧊", concept:"Trapped liquidity",
+   txt:"Money you parked overseas to make payments possible is money you cannot spend, invest, or lend. It just sits there, waiting.",
+   eff:p=>{if(nostroCount(p)===0) return "No pre-funded accounts — nothing to freeze. Dodged it.";
+     const k=Object.keys(p.nostro)[0];p.frozen[k]=2;return `${CORRIDORS[k].flag} account frozen for 2 turns.`;}},
+
+  {n:"Cut-Off Time", ico:"⏰", concept:"Banking hours",
+   txt:"You missed the 4pm wire deadline by nine minutes. Everything waits for tomorrow.",
+   eff:p=>{if(!p.inflight.length) return "Nothing in flight. No harm done.";
+     p.inflight.forEach(f=>f.turns++);return `+1 turn on all ${p.inflight.length} in-flight payment(s).`;}},
+
+  {n:"Weekend &amp; Holiday", ico:"📅", concept:"24/7/365 settlement",
+   txt:"Banks close. The XRP Ledger doesn't — it validates a new ledger every 3–5 seconds, weekends and holidays included.",
+   eff:p=>{if(!p.inflight.length) return "Nothing in flight. The closed weekend costs you nothing.";
+     p.inflight.forEach(f=>f.turns+=2);return `+2 turns on all ${p.inflight.length} in-flight payment(s).`;}},
+
+  {n:"De-Risking", ico:"✂️", concept:"De-risking",
+   txt:"Your correspondent bank decides the corridor isn't worth the compliance burden and closes your account. Whole countries have lost banking access this way.",
+   eff:p=>{const ks=Object.keys(p.nostro);if(!ks.length) return "You hold no corridor accounts to lose.";
+     const k=ks[rnd(ks.length)];const amt=p.nostro[k];delete p.nostro[k];p.cash+=amt;
+     return `${CORRIDORS[k].flag} closed. ${money(amt)} returned to cash — but that corridor's legacy rail is gone.`;}},
+
+  {n:"FX Spread Squeeze", ico:"📉", concept:"FX spread",
+   txt:"The advertised fee isn't the real fee. A slice is buried in the exchange rate you're quoted.",
+   eff:p=>{p.feePenalty=2;return "Your next 2 legacy payments cost an extra 1.5% in hidden spread.";}},
+
+  {n:"Wrong SWIFT Code", ico:"🔁", concept:"Failed payments",
+   txt:"One wrong digit. The money isn't lost, but nobody can tell you where it is either. You pay to trace it.",
+   eff:p=>{pay(p,3000);if(p.inflight.length){p.inflight[0].turns+=2;return "–$3,000 tracing fee · one payment delayed 2 more turns.";}
+     return "–$3,000 in tracing fees.";}},
+
+  {n:"Idle Float", ico:"😴", concept:"Cost of capital",
+   txt:"Trapped capital earns nothing. Meanwhile every dollar has an opportunity cost.",
+   eff:p=>{const c=Math.round(p.trapped()*0.012);if(!c) return "Nothing trapped — nothing lost. Good position.";
+     pay(p,c);return `–${money(c)} · 1.2% carrying cost on ${money(p.trapped())} trapped.`;}}
+];
+
+const FLOW_DECK = [
+  {n:"Atomic Settlement", ico:"⚛️", concept:"Atomic settlement",
+   txt:"A payment either completes in full or never happens. There is no state where the money is halfway there.",
+   eff:p=>{p.perfect=1;return "Your next payment settles with zero fee and zero slippage.";}},
+
+  {n:"Path-Finding", ico:"🧭", concept:"Path-finding",
+   txt:"The ledger searches every route between two currencies and picks the cheapest chain of trades automatically.",
+   eff:p=>{p.bonus=0.02;return "Your next payment delivers 2% more value.";}},
+
+  {n:"Auto-Bridging", ico:"🌉", concept:"Auto-bridging",
+   txt:"Nobody trades Kenyan shillings for Philippine pesos directly. XRP steps in as the middle leg so a market doesn't have to exist.",
+   eff:p=>{const amt=60000+rnd(6)*10000;const del=Math.round(amt*0.9999);p.delivered+=del;p.cash+=Math.round(del*COMMISSION);
+     return `Bonus bridged payment of ${money(amt)} delivered · +${money(Math.round(del*COMMISSION))} commission.`;}},
+
+  {n:"Consensus, Not Mining", ico:"🤝", concept:"Consensus",
+   txt:"Validators agree on the order of transactions in 3–5 seconds. There is no mining race and no block reward to pay for.",
+   eff:p=>{p.extraTurn=true;return "No waiting for a block. Take another turn.";}},
+
+  {n:"The Ledger Closes", ico:"🔔", concept:"Ledger close",
+   txt:"A new version of the ledger is validated every 3–5 seconds. That moment is final settlement — not a promise to settle later.",
+   eff:p=>{p.cash+=15000;return "+$15,000 in commissions cleared instantly.";}},
+
+  {n:"Ten Drops", ico:"💧", concept:"Transaction cost",
+   txt:"The minimum fee is 10 drops — 0.00001 XRP. It isn't paid to a miner or a bank. It's destroyed, purely to make spam expensive.",
+   eff:p=>{p.freeFees=2;return "Next 2 payments carry no network fee at all.";}},
+
+  {n:"Capital Freed", ico:"🔓", concept:"On-demand liquidity",
+   txt:"If liquidity can be sourced at the exact moment of the payment, you don't need to park money anywhere in advance.",
+   eff:p=>{const ks=Object.keys(p.nostro);if(!ks.length) return "You already run with no trapped capital. Nothing to free.";
+     const k=ks[0];const amt=p.nostro[k];delete p.nostro[k];p.cash+=amt+10000;
+     return `${CORRIDORS[k].flag} closed by choice · ${money(amt)} freed +$10,000 bonus.`;}},
+
+  {n:"Deterministic Finality", ico:"🔒", concept:"Finality",
+   txt:"Once a ledger is validated the payment cannot be reversed or clawed back. You know it's done — you're not waiting to find out.",
+   eff:p=>{p.cash+=8000;return "+$8,000 saved on reconciliation staff you no longer need.";}}
+];
+
+/* ---------------- CONCEPT GLOSSARY ---------------- */
+const CONCEPTS = {
+  "Nostro / vostro":"An account your bank holds at a foreign bank so it can pay out in that country. The money must be sitting there before any customer asks — often millions per corridor, doing nothing.",
+  "Correspondent chain":"When no direct relationship exists, a payment hops bank to bank. Each hop adds a fee, a delay, and a place for it to get stuck.",
+  "Trapped liquidity":"Capital parked in advance across dozens of corridors. It is on your balance sheet but unusable.",
+  "Banking hours":"Legacy rails settle in business hours, in business days, in each country's own calendar. A Friday afternoon payment can sit until Tuesday.",
+  "24/7/365 settlement":"The XRP Ledger validates continuously — every 3–5 seconds, every day of the year.",
+  "De-risking":"Banks closing correspondent relationships because compliance costs exceed the revenue. Smaller economies lose access entirely.",
+  "FX spread":"Profit hidden inside the exchange rate rather than shown as a fee. The advertised price is rarely the paid price.",
+  "Failed payments":"Roughly a few percent of cross-border wires fail on a data error and must be traced by hand.",
+  "Cost of capital":"Money you must hold idle has a real cost, even when nothing goes wrong.",
+  "Atomic settlement":"The payment fully completes or does not occur. No partial state, no money in limbo.",
+  "Path-finding":"The ledger automatically finds the cheapest route through available order books and liquidity.",
+  "Auto-bridging":"XRP used as an intermediate asset between two currencies that have no direct market.",
+  "Consensus":"XRPL validators agree on transaction order in seconds without mining or proof-of-work.",
+  "Ledger close":"Every 3–5 seconds a new ledger is validated. That is settlement finality, not a settlement promise.",
+  "Transaction cost":"Minimum 10 drops (0.00001 XRP), destroyed rather than paid to anyone, to price out spam.",
+  "On-demand liquidity":"Sourcing the destination currency at the moment of payment instead of pre-funding it.",
+  "Finality":"Once validated, the transaction cannot be reversed.",
+  "Slippage":"On a thin market, a large order moves the price against you. Real, and the main limit on very large bridged payments."
+};
+
+/* ---------------- STATE ---------------- */
+let S;
+
+function newPlayer(name,human){
+  return {name,human,pos:0,cash:START_CASH,delivered:0,nostro:{},frozen:{},inflight:[],
+    feePenalty:0,perfect:0,bonus:0,freeFees:0,extraTurn:false,
+    trapped(){return Object.values(this.nostro).reduce((a,b)=>a+b,0);}};
+}
+
+function newGame(){
+  S={ players:[newPlayer("You",true),newPlayer("Meridian Trust Bank",false)],
+      cur:0, turn:1, xrp:XRP_PRICE_0, learned:new Set(), over:false, tab:'c', busy:false };
+  closeModal();
+  drawBoard(); render();
+  log("Game start. You each have "+money(START_CASH)+" of working capital. First to deliver "+money(GOAL)+" of customer payments wins.");
+  setCenter("Your move","Roll the die to move around the loop. Land on a corridor to send a customer's payment — and choose which rail carries it.");
+  showRules();
+}
+
+/* ---------------- HELPERS ---------------- */
+const rnd = n => Math.floor(Math.random()*n);
+const money = n => (n<0?"-":"")+"$"+Math.abs(Math.round(n)).toLocaleString();
+const nostroCount = p => Object.keys(p.nostro).length;
+function pay(p,amt){p.cash-=amt;}
+function learn(c){if(CONCEPTS[c])S.learned.add(c);}
+
+function log(msg){
+  const el=document.getElementById("log");
+  const d=document.createElement("div");
+  d.innerHTML='<span class="t">T'+S.turn+'</span> '+msg;
+  el.prepend(d);
+}
+function setCenter(t,b){
+  document.getElementById("centerTitle").textContent=t;
+  document.getElementById("centerBody").innerHTML=b;
+}
+
+/* ---------------- BOARD ---------------- */
+function drawBoard(){
+  const b=document.getElementById("board");
+  b.innerHTML="";
+  BOARD.forEach((sp,i)=>{
+    const [r,c]=cell(i);
+    const d=document.createElement("div");
+    d.className="sq "+sp.t; d.id="sq"+i;
+    d.style.gridRow=r; d.style.gridColumn=c;
+    if(sp.t==="corridor"){
+      const co=CORRIDORS[sp.c];
+      d.innerHTML=`<div><div class="flag">${co.flag}</div>
+        <div class="lbl">${co.from} → ${co.to}</div></div>
+        <div><div class="fee">${(co.fee*100).toFixed(1)}% legacy</div>
+        <div class="sub">${co.days}-day settle</div></div>`;
+    } else {
+      d.innerHTML=`<div><div class="flag">${sp.ico}</div>
+        <div class="lbl">${sp.n}</div></div><div class="sub">${sp.s}</div>`;
+    }
+    d.innerHTML+='<div class="toks" id="tk'+i+'"></div>';
+    b.appendChild(d);
+  });
+  const ctr=document.createElement("div");
+  ctr.id="center";
+  ctr.innerHTML=`<div id="centerTitle"></div><div id="centerBody"></div>
+    <div class="dieRow"><div id="die">–</div>
+      <button class="btn-primary" id="rollBtn" onclick="roll()" style="flex:1;padding:14px">Roll the die</button></div>
+    <div id="log"></div>`;
+  b.appendChild(ctr);
+}
+
+function paintTokens(){
+  BOARD.forEach((_,i)=>{
+    const t=document.getElementById("tk"+i); if(t) t.innerHTML="";
+    const sq=document.getElementById("sq"+i);
+    if(sq){
+      sq.classList.remove("active");
+      const old=sq.querySelector(".nostro-dot"); if(old) old.remove();
+    }
+  });
+  BOARD.forEach((sp,i)=>{
+    if(sp.t==="corridor" && S.players[0].nostro[sp.c]!==undefined){
+      const sq=document.getElementById("sq"+i);
+      const dot=document.createElement("div"); dot.className="nostro-dot";
+      dot.title="You have "+money(S.players[0].nostro[sp.c])+" parked here";
+      sq.appendChild(dot);
+    }
+  });
+  S.players.forEach((p,idx)=>{
+    const t=document.getElementById("tk"+p.pos);
+    if(t){const e=document.createElement("div");e.className="tok "+(idx?"b":"a");
+      e.textContent=idx?"M":"Y";e.title=p.name;t.appendChild(e);}
+  });
+  const sq=document.getElementById("sq"+S.players[S.cur].pos);
+  if(sq) sq.classList.add("active");
+}
+
+/* ---------------- RENDER ---------------- */
+function render(){
+  paintTokens();
+  document.getElementById("dashYou").innerHTML=dash(S.players[0],"var(--p1)");
+  document.getElementById("dashAI").innerHTML=dash(S.players[1],"var(--p2)");
+  document.getElementById("rollBtn").disabled = S.over || S.busy || !S.players[S.cur].human;
+  renderTab();
+}
+
+function dash(p,col){
+  const pct=Math.min(100,p.delivered/GOAL*100);
+  return `<div class="who"><span class="pip" style="background:${col}"></span>${p.name}
+    ${p.human?'':'<span style="color:var(--dim);font-weight:400;font-size:11px">· traditional bank</span>'}</div>
+  <div class="stats">
+    <div class="stat"><div class="k">Working capital</div><div class="v" style="color:${p.cash<50000?'var(--bad)':'var(--txt)'}">${money(p.cash)}</div></div>
+    <div class="stat"><div class="k">Trapped capital</div><div class="v" style="color:${p.trapped()?'var(--friction)':'var(--good)'}">${money(p.trapped())}</div></div>
+    <div class="stat"><div class="k">In flight</div><div class="v">${p.inflight.length}</div></div>
+    <div class="stat"><div class="k">Corridors held</div><div class="v">${nostroCount(p)}</div></div>
+  </div>
+  <div class="bar"><i style="width:${pct}%"></i></div>
+  <div class="goalTxt"><span>Delivered ${money(p.delivered)}</span><span>${money(GOAL)}</span></div>`;
+}
+
+function setTab(t){S.tab=t;document.getElementById("tabC").className=t==='c'?'on':'';
+  document.getElementById("tabF").className=t==='f'?'on':'';renderTab();}
+
+function renderTab(){
+  const el=document.getElementById("tabBody");
+  if(S.tab==='c'){
+    const keys=Object.keys(CONCEPTS);
+    el.innerHTML='<div class="concepts">'+keys.map(k=>{
+      const got=S.learned.has(k);
+      return `<div class="cpt ${got?'':'locked'}"><div class="cn">${got?'':'🔒 '}${k}</div>
+        <div class="cd">${got?CONCEPTS[k]:'Encounter this in play to unlock.'}</div></div>`;
+    }).join('')+'</div>';
+  } else {
+    const p=S.players[0];
+    if(!p.inflight.length){el.innerHTML='<div style="color:var(--dim);font-size:12px;padding:8px 0">Nothing of yours is stuck in transit. Payments sent over the XRP bridge never appear here — they settle the moment you send them.</div>';return;}
+    el.innerHTML=p.inflight.map(f=>`<div class="cpt"><div class="cn">${CORRIDORS[f.c].flag} ${money(f.amt)}</div>
+      <div class="cd">Arrives in ${f.turns} turn${f.turns>1?'s':''} · ${money(f.amt)} of your capital is drawn down until it does.</div></div>`).join('');
+  }
+}
+
+/* ---------------- MODAL ---------------- */
+function modal(html){document.getElementById("mod").innerHTML=html;document.getElementById("ov").classList.add("on");}
+function closeModal(){document.getElementById("ov").classList.remove("on");}
+
+/* ---------------- TURN ENGINE ---------------- */
+function roll(){
+  if(S.over||S.busy) return;
+  S.busy=true; render();
+  const die=document.getElementById("die");
+  die.classList.add("rolling");
+  const n=1+rnd(6);
+  setTimeout(()=>{
+    die.classList.remove("rolling"); die.textContent=n;
+    move(S.players[S.cur],n);
+  },450);
+}
+
+function move(p,n){
+  const before=p.pos;
+  p.pos=(p.pos+n)%BOARD.length;
+  if(p.pos<before || n>=BOARD.length){ // passed start
+    p.cash+=25000;
+    log(`${p.name} passed <b>Ledger Close</b> · +$25,000`);
+    learn("Ledger close");
+  }
+  paintTokens();
+  setTimeout(()=>resolve(p),350);
+}
+
+function resolve(p){
+  const sp=BOARD[p.pos];
+  if(sp.t==="corridor")      corridorSpace(p,sp.c);
+  else if(sp.t==="friction") cardSpace(p,"friction");
+  else if(sp.t==="flow")     cardSpace(p,"flow");
+  else                       cornerSpace(p,sp.n);
+}
+
+/* ---- corner spaces ---- */
+function cornerSpace(p,n){
+  let title=n,body="",eff="";
+  if(n==="LEDGER CLOSE"){
+    p.cash+=25000; eff="+$25,000 operating revenue.";
+    body="A new ledger is validated on the XRP Ledger roughly every 3–5 seconds. Each close is final settlement — the payment is done, not pending.";
+    learn("Ledger close");
+  }
+  if(n==="COMPLIANCE REVIEW"){
+    const c=Math.max(1,nostroCount(p))*6000;
+    pay(p,c); eff=`–${money(c)} in AML and KYC costs.`;
+    body="Worth being fair about this: anti-money-laundering and know-your-customer obligations apply to <b>any</b> rail that touches the regulated financial system. Faster settlement does not remove them.";
+  }
+  if(n==="MARKET OPEN"){
+    const mv=(rnd(31)-15)/100;
+    S.xrp=Math.max(0.4,+(S.xrp*(1+mv)).toFixed(2));
+    eff=`XRP moved ${mv>=0?'+':''}${(mv*100).toFixed(1)}% to $${S.xrp.toFixed(2)}.`;
+    body="Here is the honest trade-off. Across a 3–5 second settlement window, price movement is close to irrelevant. Across weeks of <i>holding</i> the asset, it is not. On-demand liquidity is designed so nobody has to hold it for long.";
+    learn("Slippage");
+  }
+  if(n==="CAPITAL CALL"){
+    const c=Math.round(p.trapped()*0.02);
+    if(c){pay(p,c); eff=`–${money(c)} · 2% carrying cost on ${money(p.trapped())} of trapped capital.`;}
+    else eff="You have nothing parked overseas. This costs you nothing.";
+    body="Capital sitting in foreign accounts is not free. It has a funding cost, a balance-sheet cost, and an opportunity cost — every single day it sits there.";
+    learn("Cost of capital");
+  }
+  log(`${p.name} → <b>${n}</b> · ${eff}`);
+  render();
+  if(p.human){
+    modal(`<div class="mhead"><div class="eyebrow">Corner space</div><h2>${title}</h2></div>
+      <div class="mbody"><p style="font-size:13px;line-height:1.6;color:var(--dim)">${body}</p>
+      <div class="note"><b>Effect:</b> ${eff}</div></div>
+      <div class="mfoot"><button class="btn-primary" onclick="closeModal();endTurn()">Continue</button></div>`);
+  } else { setTimeout(endTurn,700); }
+}
+
+/* ---- card spaces ---- */
+function cardSpace(p,kind){
+  const deck = kind==="friction"?FRICTION_DECK:FLOW_DECK;
+  const card = deck[rnd(deck.length)];
+  const eff  = card.eff(p);
+  learn(card.concept);
+  log(`${p.name} drew <b>${card.n}</b> · ${eff}`);
+  render();
+  if(p.human){
+    modal(`<div class="mhead"><div class="eyebrow">${kind==="friction"?"Friction card":"Flow card"}</div>
+        <h2>${kind==="friction"?"Something got in the way":"The rail did its job"}</h2></div>
+      <div class="mbody">
+        <div class="card ${kind}"><div class="ico">${card.ico}</div><h3>${card.n}</h3>
+          <div style="font-size:13px;color:var(--dim);line-height:1.6;max-width:480px;margin:0 auto">${card.txt}</div>
+          <div class="eff" style="color:${kind==='friction'?'var(--friction)':'var(--flow)'}">${eff}</div></div>
+        <div class="note ${kind==='friction'?'amber':''}"><b>Concept:</b> ${card.concept} — ${CONCEPTS[card.concept]||''}</div>
+      </div>
+      <div class="mfoot"><button class="btn-primary" onclick="closeModal();endTurn()">Continue</button></div>`);
+  } else { setTimeout(endTurn,700); }
+}
+
+/* ---- corridor: the core decision ---- */
+function payoutSize(){ return 40000 + rnd(9)*10000; }   // $40k – $120k
+
+function slippage(amt){ // thin-market cost on large bridged payments — real, and honest
+  return Math.min(0.006, 0.0005 + Math.max(0,(amt-75000))/50000*0.001);
+}
+
+function corridorSpace(p,c,fixedAmt){
+  const co=CORRIDORS[c], amt=fixedAmt||payoutSize();
+  learn("Nostro / vostro");
+  if(!p.human){ aiCorridor(p,c,amt); return; }
+
+  const hasN = p.nostro[c]!==undefined;
+  const frozen = p.frozen[c]>0;
+  const avail = hasN ? p.nostro[c] : 0;
+
+  // legacy maths
+  const legFee = co.fee + (p.feePenalty>0?0.015:0);
+  const legDel = Math.round(amt*(1-legFee));
+  const legOK  = hasN && !frozen && avail>=amt;
+
+  // xrp maths
+  const slip = p.perfect? 0 : slippage(amt);
+  const netFee = p.perfect||p.freeFees>0 ? 0 : XRPL_FEE_XRP*S.xrp;
+  const bonus = p.bonus||0;
+  const xrpDel = Math.round(amt*(1-slip+bonus)-netFee);
+  const xrpOK  = p.cash>=amt*0.15; // you need working capital to source liquidity
+
+  let legReason="";
+  if(!hasN) legReason=`You have no pre-funded account in this corridor. Open one for ${money(NOSTRO_COST)}.`;
+  else if(frozen) legReason="This account is frozen.";
+  else if(avail<amt) legReason=`Only ${money(avail)} left in the account — not enough to pay out ${money(amt)}.`;
+
+  modal(`<div class="mhead"><div class="eyebrow">Corridor · ${co.flag}</div>
+      <h2>A customer wants to send ${money(amt)} from ${co.from} to ${co.to}</h2></div>
+    <div class="mbody">
+      <p style="font-size:13px;color:var(--dim);line-height:1.6">
+        You collected the money on the sending side. Now you have to get the equivalent into the recipient's hands. Two rails can do it. They cost very different things.</p>
+
+      <div class="rails">
+        <div class="rail legacy">
+          <h4>⚠️ Correspondent banking</h4>
+          <div class="rsub">The way most of this money moves today</div>
+          <div class="rline"><span>Fees taken out</span><b class="neg">${(legFee*100).toFixed(1)}% · –${money(amt-legDel)}</b></div>
+          <div class="rline"><span>Recipient gets</span><b>${money(legDel)}</b></div>
+          <div class="rline"><span>Arrives in</span><b class="warn">${co.days} turn${co.days>1?'s':''}</b></div>
+          <div class="rline"><span>Capital you must park</span><b class="neg">${hasN?money(0)+" (already parked)":money(NOSTRO_COST)}</b></div>
+          <div class="rline"><span>Account drawn down</span><b class="warn">${money(amt)} until it settles</b></div>
+          ${legOK
+            ? `<button class="btn-amber" onclick="sendLegacy(${c},${amt})">Send by correspondent bank</button>`
+            : (!hasN && p.cash>=NOSTRO_COST
+                ? `<button class="btn-amber" onclick="openNostro(${c},${amt})">Pre-fund this corridor (${money(NOSTRO_COST)})</button>`
+                : `<button disabled>Unavailable</button>`)}
+          ${legReason?`<div style="font-size:11px;color:var(--friction);margin-top:7px">${legReason}</div>`:""}
+        </div>
+
+        <div class="rail xrp">
+          <h4>⚡ XRP bridge (on-demand liquidity)</h4>
+          <div class="rsub">Source the destination currency at the moment of payment</div>
+          <div class="rline"><span>Network fee</span><b class="pos">${netFee?("$"+netFee.toFixed(5)):"$0.00000"} (10 drops, burned)</b></div>
+          <div class="rline"><span>Market slippage</span><b class="${slip?'warn':'pos'}">${(slip*100).toFixed(2)}%${bonus?` · path-finding +${(bonus*100).toFixed(0)}%`:''}</b></div>
+          <div class="rline"><span>Recipient gets</span><b class="pos">${money(xrpDel)}</b></div>
+          <div class="rline"><span>Arrives in</span><b class="pos">This turn (3–5 seconds)</b></div>
+          <div class="rline"><span>Capital you must park</span><b class="pos">${money(0)}</b></div>
+          ${xrpOK
+            ? `<button class="btn-primary" onclick="sendXRP(${c},${amt})">Send over the XRP bridge</button>`
+            : `<button disabled>Not enough working capital</button>`}
+        </div>
+      </div>
+
+      <div class="note"><b>The thing to notice:</b> the fee gap is real but it is not the biggest number on this screen.
+      ${money(NOSTRO_COST)} sitting dead in a foreign account — multiplied by every corridor you serve — is what actually shapes the business.
+      That is the problem on-demand liquidity is built to solve. The counter-argument is on the right column too: bridging through a traded asset means
+      market depth matters, and on a thin pair a large payment moves the price against you.</div>
+    </div>
+    <div class="mfoot">
+      <button onclick="closeModal();declinePayment()">Turn the customer away</button>
+    </div>`);
+}
+
+function declinePayment(){
+  log("You turned the payment away. No cost, no progress.");
+  render(); endTurn();
+}
+
+function openNostro(c,amt){
+  const p=S.players[0];
+  p.cash-=NOSTRO_COST; p.nostro[c]=NOSTRO_COST;
+  learn("Trapped liquidity");
+  log(`You pre-funded ${CORRIDORS[c].flag} with ${money(NOSTRO_COST)}. That capital is now trapped there.`);
+  render();
+  corridorSpace(p,c,amt); // re-open the same payment, account now live
+}
+
+function sendLegacy(c,amt){
+  const p=S.players[0], co=CORRIDORS[c];
+  const fee=co.fee+(p.feePenalty>0?0.015:0);
+  if(p.feePenalty>0)p.feePenalty--;
+  const del=Math.round(amt*(1-fee));
+  p.nostro[c]-=amt;
+  p.inflight.push({c,amt,del,turns:co.days,fresh:true});
+  learn("Correspondent chain"); learn("Banking hours");
+  log(`You sent ${money(amt)} via correspondent banking. ${money(amt-del)} lost to fees. Arrives in ${co.days} turns.`);
+  closeModal(); render(); endTurn();
+}
+
+function sendXRP(c,amt){
+  const p=S.players[0];
+  const slip=p.perfect?0:slippage(amt);
+  const netFee=(p.perfect||p.freeFees>0)?0:XRPL_FEE_XRP*S.xrp;
+  const del=Math.round(amt*(1-slip+(p.bonus||0))-netFee);
+  if(p.freeFees>0)p.freeFees--;
+  p.perfect=0; p.bonus=0;
+  p.delivered+=del; p.cash+=Math.round(del*COMMISSION);
+  learn("On-demand liquidity"); learn("Atomic settlement"); learn("Finality"); learn("Transaction cost");
+  log(`You bridged ${money(amt)} over the XRP Ledger. Delivered ${money(del)} — settled this turn, nothing parked.`);
+  closeModal(); render(); endTurn();
+}
+
+/* ---- AI ---- */
+function aiCorridor(p,c,amt){
+  const co=CORRIDORS[c];
+  const hasN=p.nostro[c]!==undefined && !(p.frozen[c]>0) && p.nostro[c]>=amt;
+  // Meridian is a traditional bank: legacy-first, but it learns.
+  const adopting = S.turn>8 && Math.random()<0.45;
+  if(!adopting && hasN){
+    const del=Math.round(amt*(1-co.fee));
+    p.nostro[c]-=amt; p.inflight.push({c,amt,del,turns:co.days});
+    log(`${p.name} wired ${money(amt)} ${co.flag} · ${money(amt-del)} in fees · ${co.days} turns to arrive.`);
+  } else if(!adopting && p.cash>=NOSTRO_COST){
+    p.cash-=NOSTRO_COST; p.nostro[c]=NOSTRO_COST-amt;
+    const del=Math.round(amt*(1-co.fee));
+    p.inflight.push({c,amt,del,turns:co.days,fresh:true});
+    log(`${p.name} pre-funded ${co.flag} with ${money(NOSTRO_COST)}, then wired ${money(amt)}.`);
+  } else if(p.cash>=amt*0.15){
+    const del=Math.round(amt*(1-slippage(amt)));
+    p.delivered+=del; p.cash+=Math.round(del*COMMISSION);
+    log(`${p.name} used the XRP bridge for ${money(amt)} ${co.flag} — settled instantly.`);
+  } else {
+    log(`${p.name} declined a ${money(amt)} payment — not enough free capital.`);
+  }
+  render(); setTimeout(endTurn,700);
+}
+
+/* ---- end of turn ---- */
+function endTurn(){
+  const p=S.players[S.cur];
+
+  // settle in-flight
+  const done=[];
+  p.inflight=p.inflight.filter(f=>{
+    if(f.fresh){f.fresh=false;return true;}   // sent this turn — the clock starts next turn
+    f.turns--;
+    if(f.turns<=0){
+      p.delivered+=f.del;
+      p.cash+=Math.round(f.del*COMMISSION);
+      if(p.nostro[f.c]!==undefined) p.nostro[f.c]+=f.amt; // replenished at last
+      done.push(f); return false;
+    }
+    return true;
+  });
+  done.forEach(f=>log(`${p.name}: the ${money(f.amt)} ${CORRIDORS[f.c].flag} wire finally landed · ${money(f.del)} delivered.`));
+
+  // thaw frozen accounts
+  Object.keys(p.frozen).forEach(k=>{p.frozen[k]--;if(p.frozen[k]<=0)delete p.frozen[k];});
+
+  if(checkEnd()) return;
+
+  if(p.extraTurn){ p.extraTurn=false; log(`${p.name} takes another turn.`);
+    S.busy=false; render();
+    if(!p.human) setTimeout(aiTurn,800); return; }
+
+  S.cur=(S.cur+1)%2;
+  if(S.cur===0) S.turn++;
+  S.busy=false; render();
+
+  if(!S.players[S.cur].human){ setTimeout(aiTurn,800); }
+  else setCenter("Your move","Roll to continue. Watch your <b>trapped capital</b> — it is the number that decides this game.");
+}
+
+function aiTurn(){
+  if(S.over) return;
+  S.busy=true; render();
+  const n=1+rnd(6);
+  document.getElementById("die").textContent=n;
+  setCenter(S.players[1].name+" is playing","Meridian is a traditional bank. It runs on correspondent rails by default — watch how much of its balance sheet ends up parked overseas.");
+  move(S.players[1],n);
+}
+
+function checkEnd(){
+  const [a,b]=S.players;
+  let winner=null,reason="";
+  if(a.delivered>=GOAL){winner=a;reason="delivered "+money(a.delivered)+" of customer payments.";}
+  else if(b.delivered>=GOAL){winner=b;reason="delivered "+money(b.delivered)+" of customer payments.";}
+  else if(a.cash<0){winner=b;reason="you ran out of working capital.";}
+  else if(b.cash<0){winner=a;reason="Meridian ran out of working capital.";}
+  if(!winner) return false;
+
+  S.over=true; render();
+  const you=winner===a;
+  modal(`<div class="mhead"><div class="eyebrow">Game over · turn ${S.turn}</div>
+      <h2>${you?"You win":"Meridian Trust Bank wins"}</h2></div>
+    <div class="mbody">
+      <p style="font-size:14px;line-height:1.6">${winner.name} ${reason}</p>
+      <table class="gloss">
+        <tr><th></th><th>You</th><th>Meridian</th></tr>
+        <tr><td>Value delivered</td><td>${money(a.delivered)}</td><td>${money(b.delivered)}</td></tr>
+        <tr><td>Working capital</td><td>${money(a.cash)}</td><td>${money(b.cash)}</td></tr>
+        <tr><td>Capital trapped overseas</td><td>${money(a.trapped())}</td><td>${money(b.trapped())}</td></tr>
+        <tr><td>Payments still in transit</td><td>${a.inflight.length}</td><td>${b.inflight.length}</td></tr>
+        <tr><td>Concepts unlocked</td><td colspan="2">${S.learned.size} of ${Object.keys(CONCEPTS).length}</td></tr>
+      </table>
+      <div class="note"><b>What the board was teaching:</b> the headline fee — 5% or 8% — is the part everyone argues about.
+      The part that decides who wins is the capital parked in advance and the days spent waiting. A payment rail that settles in
+      seconds and needs nothing pre-funded turns the same balance sheet over many more times.</div>
+      <div class="note amber"><b>And the fair counterweight:</b> correspondent banking moves the overwhelming majority of the world's
+      cross-border value today and is deeply embedded in law, compliance and custom. Bridging through a traded asset depends on real market
+      depth on both ends, exposes you to price movement while you hold it, and faces regulatory treatment that differs country by country.
+      Both columns of this board are true.</div>
+    </div>
+    <div class="mfoot"><button class="btn-primary" onclick="newGame()">Play again</button></div>`);
+  return true;
+}
+
+/* ---------------- INFO MODALS ---------------- */
+function showRules(){
+  modal(`<div class="mhead"><div class="eyebrow">How to play</div><h2>Friction &amp; Flow: The Liquidity Loop</h2></div>
+  <div class="mbody" style="font-size:13px;line-height:1.65">
+    <p>You run a money-transfer business. So does Meridian Trust Bank, a traditional bank. <b>First to deliver ${money(GOAL)} of customer payments wins.</b> Run out of working capital and you lose.</p>
+    <table class="gloss">
+      <tr><th>Space</th><th>What happens</th></tr>
+      <tr><td><b>Corridor</b> 🇺🇸→🇲🇽</td><td>A customer payment arrives. Choose a rail: correspondent banking or the XRP bridge. This is the whole game.</td></tr>
+      <tr><td><b>Friction</b> ⚠️</td><td>Draw a card. Cut-off times, frozen accounts, hidden spreads, de-risking.</td></tr>
+      <tr><td><b>Flow</b> ⚡</td><td>Draw a card. Atomic settlement, path-finding, auto-bridging, 10-drop fees.</td></tr>
+      <tr><td><b>Ledger Close</b> 🔄</td><td>Pass or land: collect $25,000.</td></tr>
+      <tr><td><b>Compliance Review</b> 🛡️</td><td>Pay AML/KYC costs. These apply to both rails — no shortcuts.</td></tr>
+      <tr><td><b>Market Open</b> 📈</td><td>The XRP price moves. Relevant if you hold; nearly irrelevant across a 3-second settlement.</td></tr>
+      <tr><td><b>Capital Call</b> 🏦</td><td>Pay 2% carrying cost on everything you have parked overseas.</td></tr>
+    </table>
+    <div class="note"><b>The two rails, in one line each.</b><br>
+    <b>Correspondent banking:</b> you must park ${money(NOSTRO_COST)} in a foreign account <i>before</i> anyone asks to send money. Fees run 5–8%. Arrival takes 2–3 turns.<br>
+    <b>XRP bridge:</b> nothing parked in advance. The fee is 10 drops of XRP — 0.00001 XRP, destroyed rather than paid to anyone. It arrives the same turn. But it prices liquidity from a live market, so a large payment on a thin pair costs you slippage.</div>
+    <div class="note amber"><b>The trap most players fall into:</b> chasing the fee percentage and ignoring the trapped capital. Open four legacy corridors and ${money(NOSTRO_COST*4)} of your ${money(START_CASH)} is frozen. That is the real lesson on this board.</div>
+  </div>
+  <div class="mfoot"><button class="btn-primary" onclick="closeModal()">Start playing</button></div>`);
+}
+
+/* ---------- FULL TEACHING GUIDE (built in, so this stays one file) ---------- */
+const GUIDE_HTML = `
+<h3 style="font-size:16px;text-transform:none;letter-spacing:0;color:var(--txt);margin:0 0 8px">For the person running the session</h3>
+<p>Most explanations of XRP start with the price. This one starts with the problem. A player runs a money-transfer
+business against a traditional bank, and every corridor space forces a single decision — correspondent banking or the
+XRP bridge — showing the full cost of both, including the cost nobody puts on a fee schedule: the capital you must park
+overseas before anyone even asks you to send anything.</p>
+
+<h3 style="font-size:15px;text-transform:none;letter-spacing:0;color:var(--txt);margin:20px 0 8px">The two rails, and what each really costs</h3>
+<p><b>Correspondent banking.</b> To pay someone in Mexico you must <i>already</i> have money sitting in a Mexican bank
+account — a nostro account. Not when the customer arrives. Before. Here that is ${money(NOSTRO_COST)} locked per
+corridor and it does not come back until you close the account. Fees run 5.2%–7.7% by corridor, arrival takes 2–3 turns,
+and the account is drawn down while a payment is in flight, so you lose capacity in that corridor.</p>
+<p><b>The XRP bridge.</b> You take the customer's money, convert to XRP, send it, and convert on arrival. Nothing parked
+in advance. The network fee is 10 drops — 0.00001 XRP — destroyed rather than paid to a miner or a bank. It settles in
+3–5 seconds, continuously, weekends included. But you are pricing through a live market, so a large payment on a thin
+pair costs slippage: 0.05%–0.6% here, scaling with size.</p>
+<div class="note amber"><b>The trap most players fall into:</b> chasing the fee percentage and ignoring the trapped
+capital. Serve four legacy corridors and ${money(NOSTRO_COST*4)} of your ${money(START_CASH)} is spoken for — you cannot
+afford it. In testing, legacy-only play had to turn away roughly seven customers a game purely because it had not
+pre-funded the corridor the customer wanted. That constraint <i>is</i> the lesson.</div>
+
+<h3 style="font-size:15px;text-transform:none;letter-spacing:0;color:var(--txt);margin:20px 0 8px">The honest counterweight</h3>
+<p>This board is deliberately not a sales pitch. Three things cut the other way:</p>
+<ol style="padding-left:20px;line-height:1.7">
+<li><b>Correspondent banking moves the overwhelming majority of the world's cross-border value today.</b> It is embedded
+in law, contracts, compliance infrastructure and habit. Incumbency is a real advantage, not a rounding error.</li>
+<li><b>Bridging depends on market depth at both ends.</b> Slippage is not a token mechanic — it is the genuine limit on
+very large bridged payments, and it is why the corridor matters as much as the technology.</li>
+<li><b>Compliance does not go away.</b> The Compliance Review corner charges both players. Faster settlement changes the
+plumbing, not the obligation. Regulatory treatment also differs country by country.</li>
+</ol>
+<p>A player who finishes thinking "XRP is free" has misread it. The defensible point is narrower: <i>the pre-funding
+requirement is the expensive part of the old model, and settling in seconds is what removes it.</i></p>
+
+<h3 style="font-size:15px;text-transform:none;letter-spacing:0;color:var(--txt);margin:20px 0 8px">Where each concept appears</h3>
+<table class="gloss"><tr><th>Concept</th><th>Where a player meets it</th></tr>
+<tr><td>Nostro / vostro accounts</td><td>Every corridor space</td></tr>
+<tr><td>Trapped liquidity</td><td>Pre-funding a corridor; the Trapped Capital counter</td></tr>
+<tr><td>Correspondent chain</td><td>Middleman Tax card</td></tr>
+<tr><td>Banking hours and cut-offs</td><td>Cut-Off Time, Weekend &amp; Holiday cards</td></tr>
+<tr><td>24/7/365 settlement</td><td>The contrast to those same cards</td></tr>
+<tr><td>De-risking</td><td>De-Risking card</td></tr>
+<tr><td>FX spread</td><td>FX Spread Squeeze card</td></tr>
+<tr><td>Failed payments</td><td>Wrong SWIFT Code card</td></tr>
+<tr><td>Cost of capital</td><td>Capital Call corner; Idle Float card</td></tr>
+<tr><td>Atomic settlement</td><td>Atomic Settlement card</td></tr>
+<tr><td>Path-finding</td><td>Path-Finding card</td></tr>
+<tr><td>Auto-bridging</td><td>Auto-Bridging card</td></tr>
+<tr><td>Consensus, no mining</td><td>Consensus card</td></tr>
+<tr><td>Ledger close</td><td>Passing Start; The Ledger Closes card</td></tr>
+<tr><td>Transaction cost, 10 drops</td><td>Ten Drops card; every XRP send</td></tr>
+<tr><td>On-demand liquidity</td><td>Capital Freed card; every XRP send</td></tr>
+<tr><td>Finality</td><td>Deterministic Finality card</td></tr>
+<tr><td>Slippage</td><td>Market Open corner; large XRP payments</td></tr></table>
+<p style="margin-top:8px">The sidebar tracks these as locked or unlocked. A typical game unlocks 15–16 of 18.</p>
+
+<h3 style="font-size:15px;text-transform:none;letter-spacing:0;color:var(--txt);margin:20px 0 8px">Discussion questions</h3>
+<ol style="padding-left:20px;line-height:1.75">
+<li>You lost $6,500 in fees on a $100,000 payment, and separately you have ${money(NOSTRO_COST)} sitting idle in a foreign account. Which costs your business more over a year? Show your working.</li>
+<li>Why would a bank keep using a rail it knows is slower and more expensive?</li>
+<li>The 10-drop fee is destroyed rather than paid to anyone. Why design it that way instead of paying validators?</li>
+<li>De-risking closed your corridor and handed your capital back. Was that good or bad for you? What about for the people who live in that country?</li>
+<li>Where does slippage stop being a rounding error and start being the deciding factor?</li>
+</ol>
+
+<h3 style="font-size:15px;text-transform:none;letter-spacing:0;color:var(--txt);margin:20px 0 8px">Where the numbers come from</h3>
+<p><b>Corridor fees</b> track the World Bank's <i>Remittance Prices Worldwide</i> dataset — a 6.49% global average as of
+2025 against a UN target of 3%. Sub-Saharan Africa runs around 7.7%, South Asia around 5.2%. Banks as a provider class
+average roughly 15%.</p>
+<p><b>XRP Ledger figures</b> come from xrpl.org: a minimum transaction cost of 10 drops (0.00001 XRP) destroyed rather
+than paid to a validator; ledgers validating every 3–5 seconds under normal conditions; consensus with no mining or
+proof-of-work.</p>
+<p><b>Simplified for playability:</b> the ${money(NOSTRO_COST)} pre-funding figure. Real nostro balances vary enormously
+by corridor and institution — representative, not quoted. Settlement days are compressed into turns.</p>
+<div class="note"><b>Running it.</b> This is one self-contained file. No install, no internet, no accounts. Email it,
+put it on a USB stick, or host it anywhere. Tested across 36 full simulated games with no errors; games run 24–32 turns
+and XRP-heavy play wins roughly 60–75% — a clear lesson that still has to be played for.</div>`;
+
+function showGuide(){
+  modal(`<div class="mhead"><div class="eyebrow">Facilitator material</div><h2>Teaching guide</h2></div>
+  <div class="mbody" style="font-size:13px;line-height:1.65">${GUIDE_HTML}</div>
+  <div class="mfoot"><button onclick="printGuide()">Print / save as PDF</button>
+  <button class="btn-primary" onclick="closeModal()">Close</button></div>`);
+}
+
+function printGuide(){
+  const w2=window.open("","_blank");
+  if(!w2){alert("Your browser blocked the print window. Allow pop-ups for this page and try again.");return;}
+  w2.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+  <title>Friction &amp; Flow — Teaching Guide</title><style>
+    body{font-family:Georgia,'Times New Roman',serif;max-width:44em;margin:2.5em auto;padding:0 1.5em;
+      line-height:1.6;color:#111;font-size:12pt}
+    h1{font-size:22pt;margin-bottom:.1em} .sub{color:#555;font-style:italic;margin-bottom:2em}
+    h3{font-size:13pt;margin:1.6em 0 .5em;border-bottom:1px solid #ccc;padding-bottom:.2em}
+    table{width:100%;border-collapse:collapse;margin:1em 0;font-size:10.5pt}
+    th,td{border:1px solid #bbb;padding:6px 9px;text-align:left;vertical-align:top}
+    th{background:#eee}
+    .note{background:#f4f4f4;border-left:4px solid #666;padding:.8em 1em;margin:1.2em 0}
+    .note.amber{border-left-color:#b45309}
+    ol{padding-left:1.4em} li{margin:.35em 0}
+    @page{margin:2cm}
+  </style></head><body>
+  <h1>Friction &amp; Flow: The Liquidity Loop</h1>
+  <div class="sub">Teaching guide — how cross-border money actually moves</div>
+  ${GUIDE_HTML}
+  </body></html>`);
+  w2.document.close();
+  setTimeout(()=>w2.print(),350);
+}
+
+function showGloss(){
+  modal(`<div class="mhead"><div class="eyebrow">Reference</div><h2>Glossary &amp; where the numbers come from</h2></div>
+  <div class="mbody" style="font-size:13px;line-height:1.6">
+    <table class="gloss"><tr><th>Term</th><th>Meaning</th></tr>
+    ${Object.entries(CONCEPTS).map(([k,v])=>`<tr><td><b>${k}</b></td><td>${v}</td></tr>`).join('')}</table>
+    <div class="note"><b>Sources for the figures used on the board.</b><br>
+    Corridor fees track the World Bank's <i>Remittance Prices Worldwide</i> regional averages — a 6.49% global average as of 2025, with Sub-Saharan Africa around 7.7% and South Asia around 5.2%. Banks as a provider class average roughly 15%. The UN target is 3%.<br><br>
+    XRP Ledger figures come from xrpl.org: a minimum transaction cost of 10 drops (0.00001 XRP) which is destroyed rather than paid to a validator, ledgers validating every 3–5 seconds under normal conditions, and a consensus protocol with no mining or proof-of-work.<br><br>
+    The $200,000 pre-funding figure is a simplification for playability. Real nostro balances vary enormously by corridor and institution.</div>
+  </div>
+  <div class="mfoot"><button class="btn-primary" onclick="closeModal()">Close</button></div>`);
+}
+
+newGame();
+</script>
+</body>
+</html>

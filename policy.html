@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>For policymakers — Friction &amp; Flow</title>
+<meta name="description" content="A 10-minute primer on the payment mechanics behind the Digital Asset Market Clarity Act, mapped to the bill's defined terms.">
+<meta name="theme-color" content="#0a0f1c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='8' fill='%230a0f1c'/%3E%3Crect x='6' y='6' width='24' height='24' rx='6' fill='none' stroke='%23f59e0b' stroke-width='3.6' stroke-dasharray='17 7 17 7' stroke-linecap='round'/%3E%3Ccircle cx='18' cy='6' r='3.6' fill='%2322d3ee'/%3E%3C/svg%3E">
+<meta property="og:title" content="From the Board to the Bill">
+<meta property="og:description" content="A 10-minute primer on the payment mechanics behind the Digital Asset Market Clarity Act.">
+<meta property="og:url" content="https://liquidityloop.org/policy">
+<meta property="og:image" content="https://liquidityloop.org/og-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://liquidityloop.org/og-card.png">
+<style>
+:root{--bg:#0a0f1c;--panel:#121c33;--line:#243356;--txt:#e8eefc;--dim:#8fa2c8;--flow:#22d3ee;--friction:#f59e0b}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(1100px 600px at 50% -10%,#152244 0%,var(--bg) 60%);
+  color:var(--txt);font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+  min-height:100vh;padding:40px 20px;font-size:16px;line-height:1.65}
+.wrap{max-width:800px;margin:0 auto}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:34px;
+  padding-bottom:20px;border-bottom:1px solid var(--line)}
+.logo{font-size:22px;font-weight:800;letter-spacing:-.5px;text-decoration:none;
+  display:flex;align-items:center;gap:10px;color:var(--txt)}
+.logo .f{color:var(--friction)}.logo .l{color:var(--flow)}
+.logo .mark{width:28px;height:28px;flex:none;display:block}
+nav{margin-left:auto;display:flex;gap:18px;font-size:14px}
+nav a{color:var(--dim);text-decoration:none}
+nav a:hover{color:var(--flow)}
+nav a.on{color:var(--txt);font-weight:600}
+h1{font-size:30px;letter-spacing:-.02em;margin-bottom:8px}
+.sub{color:var(--dim);font-size:16px;margin-bottom:10px}
+h2{font-size:18px;margin:34px 0 10px;letter-spacing:-.01em}
+p{margin-bottom:14px}
+a.inline{color:var(--flow)}
+ol{padding-left:22px;margin-bottom:14px}
+li{margin:8px 0}
+.play{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:16px 20px;margin:22px 0;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.play b{font-size:16px}
+.play .meta{color:var(--dim);font-size:13.5px}
+.cta{background:linear-gradient(135deg,var(--flow),#0891b2);color:#04121a;font-weight:700;
+  padding:11px 20px;border-radius:10px;text-decoration:none;margin-left:auto;white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:16px 0}
+th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top;line-height:1.5}
+th{background:var(--panel);font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim)}
+td b{color:var(--txt)}
+.term{width:34%}
+.note{background:var(--panel);border-left:3px solid var(--flow);border-radius:0 10px 10px 0;
+  padding:16px 20px;margin:20px 0;font-size:14.5px}
+.note.amber{border-left-color:var(--friction)}
+.note p:last-child{margin-bottom:0}
+footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim);font-size:13px}
+footer p{margin-bottom:8px}
+@media(max-width:640px){
+  table,thead,tbody,tr,td,th{display:block;width:100%}
+  thead{display:none}
+  tr{margin-bottom:14px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  td{border:none;border-bottom:1px solid var(--line)}
+  td:last-child{border-bottom:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <a class="logo" href="/">
+    <svg class="mark" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Friction and Flow">
+      <rect x="3.4" y="3.4" width="29.2" height="29.2" rx="7" fill="none" stroke="#f59e0b"
+            stroke-width="3.4" stroke-dasharray="21 8 21 8" stroke-linecap="round"/>
+      <rect x="11" y="11" width="14" height="14" rx="3.6" fill="none" stroke="#22d3ee"
+            stroke-width="3" stroke-dasharray="40 20" stroke-linecap="round"/>
+      <circle cx="18" cy="3.4" r="3.6" fill="#22d3ee"/>
+    </svg>
+    <span><span class="f">Friction</span> &amp; <span class="l">Flow</span></span>
+  </a>
+  <nav>
+    <a href="/">The game</a>
+    <a href="/policy" class="on">For policymakers</a>
+    <a href="/about">About</a>
+  </nav>
+</header>
+
+<h1>From the Board to the Bill</h1>
+<div class="sub">A 10-minute primer on the mechanics behind the Digital Asset Market Clarity Act.</div>
+
+<div class="play">
+  <div>
+    <b>Friction &amp; Flow: The Liquidity Loop</b>
+    <div class="meta">Free · no signup · no download · works on a phone · about ten minutes</div>
+  </div>
+  <a class="cta" href="/">Play it →</a>
+</div>
+
+<h2>What this is, and what it isn't</h2>
+
+<p>The CLARITY Act asks regulators and courts to sort digital assets by function — what an asset <i>does</i>, who controls the system it runs on, and whether its value comes from someone's ongoing efforts. Those are mechanical questions before they are legal ones.</p>
+
+<p>This game teaches the mechanics. Play it and you will know, from having done it rather than read it, what a nostro account is, why pre-funded capital is the expensive part of cross-border payments, what settlement finality means, and why a network with no controlling operator behaves differently from one with a company behind it.</p>
+
+<p><b>It is not a position on the bill.</b> The game argues both sides by design: the closing screen makes the case for incumbent correspondent banking, and the compliance space charges both payment rails equally, because anti-money-laundering obligations attach to the activity, not the technology. Nobody is asked to support or oppose anything.</p>
+
+<div class="note amber">
+<p><b>Scope limit, stated plainly.</b> CLARITY is primarily a <i>market structure</i> bill — who regulates what, and under which registration regime. This game is about <i>payments and settlement</i>. It builds the predicate understanding that market-structure questions rest on. It is not a summary of the bill and should not be used as one.</p>
+</div>
+
+<h2>Where the game meets the statute</h2>
+
+<table>
+<thead><tr><th class="term">The bill's term</th><th>What it turns on</th><th>Where the game shows it</th></tr></thead>
+<tbody>
+<tr>
+  <td><b>Digital commodity</b> — a digital asset whose value is <i>"intrinsically linked to the use of the blockchain"</i>; excludes securities, derivatives and stablecoins</td>
+  <td>Someone has to answer: linked to <i>what use</i>, exactly?</td>
+  <td>Every corridor space. The use is bridging liquidity so a firm doesn't have to park capital in a foreign account before a customer ever shows up.</td>
+</tr>
+<tr>
+  <td><b>Mature blockchain system</b> — <i>"not controlled by any person or group of persons under common control,"</i> certified to the SEC by the issuer</td>
+  <td>Whether a system has a controlling operator, or whether validators reach agreement without one</td>
+  <td>The <b>Consensus</b> card. Validators agree on transaction order in seconds, with no mining race and no single party sequencing the ledger.</td>
+</tr>
+<tr>
+  <td><b>Ancillary asset</b> (Senate text) — a network token whose value <i>"is dependent upon the entrepreneurial or managerial efforts"</i> of an originator or related person</td>
+  <td>Distinguishing an asset held in expectation of someone else's efforts from one used as a settlement instrument</td>
+  <td>The <b>Market Open</b> corner draws exactly this line: price movement across a 3–5 second settlement window is close to irrelevant; across months of <i>holding</i>, it is not.</td>
+</tr>
+<tr>
+  <td><b>Settlement finality</b>, and the customer-property and bankruptcy protections</td>
+  <td>When a transfer becomes irreversible, and therefore whose property it is if a firm fails</td>
+  <td>The <b>Deterministic Finality</b> and <b>Atomic Settlement</b> cards. A payment either completes in full or never happened.</td>
+</tr>
+<tr>
+  <td><b>DeFi provisions and developer protections</b></td>
+  <td>Whether an automated protocol with no intermediary can be regulated like one</td>
+  <td><b>Path-finding</b> and <b>Auto-bridging</b>. The ledger routes through the cheapest chain of trades automatically. There is no desk and no broker.</td>
+</tr>
+<tr>
+  <td><b>Illicit finance provisions</b></td>
+  <td>Whether faster settlement weakens AML and KYC enforcement</td>
+  <td>The <b>Compliance Review</b> corner charges both players, on both rails. Faster settlement changes the plumbing, not the obligation.</td>
+</tr>
+<tr>
+  <td><b>Stablecoins</b> — excluded from <i>digital commodity</i>; yield limits addressed separately</td>
+  <td>What these instruments actually compete with</td>
+  <td>The correspondent banking rail: 5.2%–7.7% in fees, 2–5 days, and $200,000 parked per corridor.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>The three things a staffer will actually take away</h2>
+
+<p><b>1. The fee is not the interesting number.</b> Cross-border payments average 6.49% globally against a UN target of 3%, and banks as a provider class run near 15%. But the binding constraint is the capital a firm must park in a foreign account <i>before anyone sends anything</i> — often millions per corridor, unusable, earning nothing. In playtesting, a legacy-only strategy had to turn away roughly seven customers per game purely for lack of pre-funded corridors.</p>
+
+<p><b>2. De-risking is a policy problem hiding in a technical one.</b> When compliance costs exceed revenue, banks close correspondent relationships and whole economies lose access to the payment system. The game has a card for it because it happens.</p>
+
+<p><b>3. "Use" is a testable claim, not a talking point.</b> The bill's central definitions turn on what an asset does. Ten minutes of play makes that claim concrete enough to interrogate — including where it's weakest. The game charges slippage on large payments, because bridging through a traded asset depends on real market depth, and on a thin pair a large order moves the price against you. That is the honest limit, and it is built into the scoring.</p>
+
+<h2>Questions the game equips someone to ask</h2>
+
+<p>Non-partisan, and useful regardless of position on the bill.</p>
+
+<ol>
+<li>If <i>digital commodity</i> status turns on value being "intrinsically linked to the use of the blockchain," what evidence of use should a certification have to show — and who audits it?</li>
+<li>The <i>mature blockchain system</i> test asks whether a system is controlled by persons under common control. How is control measured — validator concentration, code-change authority, token distribution, or something else?</li>
+<li>Under the Senate's <i>ancillary asset</i> presumption, does an asset's treatment change based on how it's used — settled in seconds versus held for years — or only on who issued it?</li>
+<li>Where do the customer-property protections sit relative to settlement finality? If a transfer is irreversible at the protocol level but a firm fails mid-transaction, whose asset is it?</li>
+<li>If AML obligations attach to the activity rather than the rail, does anything in this bill change an intermediary's existing BSA duties?</li>
+</ol>
+
+<h2>Sources for every figure used</h2>
+
+<p>Payment costs come from the World Bank's <i>Remittance Prices Worldwide</i> dataset: a 6.49% global average as of 2025, Sub-Saharan Africa near 7.7%, South Asia near 5.2%, banks as a provider class near 15%, against a UN Sustainable Development Goal target of 3%.</p>
+
+<p>Ledger figures come from xrpl.org: a minimum transaction cost of 10 drops (0.00001 XRP) which is destroyed rather than paid to any validator, ledgers validating every 3–5 seconds under normal conditions, and a consensus protocol with no mining or proof-of-work.</p>
+
+<p>Bill terminology is drawn from H.R. 3633 as passed by the House and the Senate substitute text released July 22, 2026. Legislative text changes; verify against the current version before relying on any characterization here.</p>
+
+<p>The $200,000 pre-funding figure is a simplification for playability. Real nostro balances vary widely by corridor and institution.</p>
+
+<div class="note">
+<p><b>Corrections welcome.</b> If something here is wrong, tell me and I'll fix it: <a class="inline" href="mailto:scott@liquidityloop.org">scott@liquidityloop.org</a></p>
+</div>
+
+<footer>
+  <p>Built independently. Not affiliated with Ripple, the XRP Ledger Foundation, or any digital asset company. No organization funded, commissioned, or reviewed this work.</p>
+  <p><a class="inline" href="/about">Full disclosure of commercial interests →</a></p>
+</footer>
+
+</div>
+</body>
+</html>
